@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="All" type="CompoundRunConfigurationType">
+    <toRun name="AuthApi: http" type="LaunchSettings" />
+    <toRun name="EimzoApi" type="LaunchSettings" />
+    <toRun name="GatewayApi: http" type="LaunchSettings" />
+    <toRun name="PetitionApi: http" type="LaunchSettings" />
+    <method v="2" />
+  </configuration>
+</component>
