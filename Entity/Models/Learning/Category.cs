@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entity.Models.Learning;
 
-[Table("category", Schema = "learning")]
+[Table("categories", Schema = "learning")]
 public class Category : ModelBase<int>
 {
     [Column("title")]
@@ -12,6 +12,6 @@ public class Category : ModelBase<int>
     [Column("description")] 
     public MultiLanguageField Description { get; set; }
 
-    [Column("image_linc")] 
-    public string ImageLinc { get; set; }
+    [Column("image_link")]
+    public string ImageLink { get; set; }
 }

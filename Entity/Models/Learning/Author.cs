@@ -12,9 +12,13 @@ public class Author : ModelBase<int>
     public MultiLanguageField? Content { get; set; }
     [Column("image_linc")] 
     public string ImageLinc { get; set; }
+
+    [Column("user_id")]
+    [ForeignKey(nameof(User))]
+    public long UserId { get; set; }
+    public User User { get; set; }
     [NotMapped]public virtual ICollection<Course> Courses { get; set; }
     [NotMapped]public virtual ICollection<Article> Articles { get; set; }
     [NotMapped]public virtual ICollection<ShortVideo> ShortVideos { get; set; }
     [NotMapped]public virtual ICollection<SeminarVideo> SeminarVideos { get; set; }
-    public virtual ICollection<AuthorToCategory> Categories { get; set; }
 }

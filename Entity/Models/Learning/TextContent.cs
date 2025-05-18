@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entity.Models.Learning;
 
-[Table("video_of_courses", Schema = "learning")]
-public class VideoOfCourse : AuditableModelBase<int>
+[Table("test_contents", Schema = "learning")]
+public class TextContent : AuditableModelBase<int>
 {
+    [Column("content")]
+    public string Content { get; set; }
+    
     public virtual CourseItem CourseItem { get; set; }
-
-    [Column("link")]
-    public string Link { get; set; }
 }

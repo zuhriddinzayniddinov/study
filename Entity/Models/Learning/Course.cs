@@ -7,16 +7,16 @@ namespace Entity.Models.Learning;
 public class Course : AuditableModelBase<int>
 {
     [Column("title")]
-    public MultiLanguageField Title { get; set; }
+    public string Title { get; set; }
 
     [Column("description")]
-    public MultiLanguageField Description { get; set; }
+    public string Description { get; set; }
 
     [Column("image")]
     public string Image { get; set; }
 
-    [Column("order_number")]
-    public int OrderNumber { get; set; }
+    [Column("language_code")]
+    public string LanguageCode { get; set; } = "uz";
 
     [Column("author_id")]
     [ForeignKey(nameof(Author))]
@@ -28,11 +28,10 @@ public class Course : AuditableModelBase<int>
     [ForeignKey(nameof(Category))]
     public int CategoryId { get; set; }
     public virtual Category? Category { get; set; }
-    public virtual Quiz? Quiz { get; set; }
 
-    [Column("docs_url")]
-    public List<string> DocsUrl { get; set; }
     [Column("hashtag_id")]
     public List<int>? HashtagId { get; set; }
     [NotMapped] public List<Hashtag>? Hashtags { get; set; } = new List<Hashtag>();
+
+    public virtual ICollection<Module> Modules { get; set; } = new List<Module>();
 }
