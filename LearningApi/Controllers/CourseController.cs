@@ -10,58 +10,46 @@ namespace LearningApi.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-public class CourseController : ApiControllerBase
+public class CourseController(ICourseService courseService) : ApiControllerBase
 {
-    private readonly ICourseService _courseService;
-
-    public CourseController(ICourseService courseService)
-    {
-        _courseService = courseService;
-    }
     [HttpPost]
-    public async ValueTask<ResponseModel> CreateCourse(CourseDto course)
+    public async Task<ResponseModel> CreateCourse(CourseDto course)
     {
         return ResponseModel
-            .ResultFromContent(await _courseService.CreateCourseAsync(course));
+            .ResultFromContent(await courseService.CreateCourseAsync(course, UserId));
     }
 
     [HttpGet]
-    public async ValueTask<ResponseModel> GetAllCourse([FromQuery] MetaQueryModel metaQuery)
+    public async Task<ResponseModel> GetAllCourse([FromQuery] MetaQueryModel metaQuery)
     {
-        if (Request.Query.Count == 0)
-            metaQuery.Take = 1000;
-
         return ResponseModel
-            .ResultFromContent(await _courseService.GetAllCourseAsync(metaQuery));
+            .ResultFromContent(await courseService.GetAllCourseAsync(metaQuery));
     }
     [HttpGet]
-    public async ValueTask<ResponseModel> GetAllCourseByCategoryId([FromQuery] MetaQueryModel metaQuery,[FromQuery]int categoryId)
+    public async Task<ResponseModel> GetAllCourseByCategoryId([FromQuery] MetaQueryModel metaQuery,[FromQuery]int categoryId)
     {
-        if (Request.Query.Count == 0)
-            metaQuery.Take = 1000;
-
         return ResponseModel
-            .ResultFromContent(await _courseService.GetAllCourseByCategoryIdAsync(metaQuery,categoryId));
+            .ResultFromContent(await courseService.GetAllCourseByCategoryIdAsync(metaQuery,categoryId));
     }
 
     [HttpGet]
-    public async ValueTask<ResponseModel> GetCourseById(int id)
+    public async Task<ResponseModel> GetCourseById(int id)
     {
         return ResponseModel
-            .ResultFromContent(await _courseService.GetCourseByIdAsync(id));
+            .ResultFromContent(await courseService.GetCourseByIdAsync(id));
     }
 
     [HttpPut]
-    public async ValueTask<ResponseModel> UpdateCourse(Course course)
+    public async Task<ResponseModel> UpdateCourse(Course course)
     {
         return ResponseModel
-            .ResultFromContent(await _courseService.UpdateCourseAsync(course));
+            .ResultFromContent(await courseService.UpdateCourseAsync(course, UserId));
     }
 
     [HttpDelete]
-    public async ValueTask<ResponseModel> DeleteCourse(int id)
+    public async Task<ResponseModel> DeleteCourse(int id)
     {
         return ResponseModel
-            .ResultFromContent(await _courseService.DeleteCourseAsync(id));
+            .ResultFromContent(await courseService.DeleteCourseAsync(id, UserId));
     }
 }

@@ -3,9 +3,9 @@ using Entitys.Models;
 namespace Entity.DataTransferObjects.Learning;
 
 public record ArticleDto(
-    MultiLanguageField title,
-    MultiLanguageField description,
-    MultiLanguageField content,
+    string title,
+    string description,
+    string content,
     int authorId,
     int categoryId,
     List<int> hashtagId,

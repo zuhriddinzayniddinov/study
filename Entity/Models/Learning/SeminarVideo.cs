@@ -23,8 +23,4 @@ public class SeminarVideo : ModelBase<int>
     public int CategoryId { get; set; }
 
     public virtual Category? Category { get; set; }
-
-    [Column("hashtag_id")]
-    public List<int> HashtagId { get; set; }
-    [NotMapped] public List<Hashtag>? Hashtags { get; set; } = new List<Hashtag>();
 }

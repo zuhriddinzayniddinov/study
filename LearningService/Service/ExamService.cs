@@ -113,7 +113,7 @@ public class ExamService : IExamService
         
         return new ExamDto(exam.Id,
             exam.QuizId,
-            exam.Quiz.Title,
+            exam.Quiz.ToString(),
             (long)exam.CreatedAt.Subtract(new DateTime(1970,1,1)).TotalSeconds,
             (long)exam.CreatedAt.Subtract(new DateTime(1970,1,1)).TotalSeconds + (long)exam.Quiz.Duration.TotalSeconds,
             exam.Status,
@@ -217,7 +217,7 @@ public class ExamService : IExamService
         
         return new ExamDto(exam.Id,
             exam.QuizId,
-            exam.Quiz.Title,
+            exam.Quiz.ToString(),
             (long)exam.CreatedAt.Subtract(new DateTime(1970,1,1)).TotalSeconds,
             (long)exam.ClosedAt?.Subtract(new DateTime(1970,1,1)).TotalSeconds,
             exam.Status,
@@ -279,7 +279,7 @@ public class ExamService : IExamService
         
         return new ExamResultDto(
             exam.Id,
-            new Quiz(){Description = exam.Quiz.Description,Title = exam.Quiz.Title},
+            new Quiz(){},
             exam.CreatedAt,
             (DateTime)exam.ClosedAt,
             exam.Status,
@@ -455,11 +455,9 @@ public class ExamService : IExamService
     public async Task<QuizInfoDto> GetQuizByCourseIdAsync(long userId,long courseId)
     {
         var quiz = await _quizRepository.GetAllAsQueryable()
-            .Where(q => q.CourseId == courseId)
+            .Where(q => q.CourseItem.Id == courseId)
             .Select(q => new QuizInfoDto(
                 q.Id,
-                q.Title,
-                q.Description,
                 q.TotalScore,
                 q.PassingScore,
                 q.Duration.Minutes,

@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using AuthenticationBroker.Options;
 using AuthenticationBroker.TokenHandler;
 using DatabaseBroker.Context;
+using DatabaseBroker.DataContext;
 using Entity.Enum;
 using Entity.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

@@ -3,10 +3,7 @@
 namespace Entity.DataTransferObjects.Learning;
 
 public record QuizDto(
-    long? id,
-    int courseId,
-    MultiLanguageField title,
-    MultiLanguageField description, 
+    long? id, 
     decimal totalScore,
     decimal passingScore,
     int durationMinutes);

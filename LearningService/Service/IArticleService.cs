@@ -6,13 +6,13 @@ namespace LearningService.Service;
 
 public interface IArticleService
 { 
-    ValueTask<Article> CreateArticleAsync(ArticleDto article);
-    ValueTask<Article> UpdateArticleAsync(Article article);
-    ValueTask<Article> DeleteArticleAsync(int articleId);
-    ValueTask<Article> GetArticleByIdAsync(int id);
-    ValueTask<IList<Article>> GetAllArticleAsync(MetaQueryModel metaQuery);
-    ValueTask<IList<Article>> GetAllArticleByHashtagIdAsync(MetaQueryModel metaQuery,int hashtagId);
-    ValueTask<IList<Article>> GetAllArticleByAuthorIdAsync(MetaQueryModel metaQuery,int authorId);
-    ValueTask<IList<Article>> GetAllArticleByCategoryIdAsync(MetaQueryModel metaQuery,int categoryId);
-    ValueTask<IList<ArticleForWithDetailsDto>> GetArticleWithDetailsAsync(MetaQueryModel metaQuery);
+    Task<Article> CreateArticleAsync(ArticleDto article);
+    Task<Article> UpdateArticleAsync(Article article);
+    Task<Article> DeleteArticleAsync(int articleId);
+    Task<Article> GetArticleByIdAsync(int id);
+    Task<IList<Article>> GetAllArticleAsync(MetaQueryModel metaQuery);
+    Task<IList<Article>> GetAllArticleByHashtagIdAsync(MetaQueryModel metaQuery,int hashtagId);
+    Task<IList<Article>> GetAllArticleByAuthorIdAsync(MetaQueryModel metaQuery,int authorId);
+    Task<IList<Article>> GetAllArticleByCategoryIdAsync(MetaQueryModel metaQuery,int categoryId);
+    Task<IList<ArticleForWithDetailsDto>> GetArticleWithDetailsAsync(MetaQueryModel metaQuery);
 }

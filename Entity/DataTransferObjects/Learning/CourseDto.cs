@@ -1,13 +1,9 @@
-﻿using Entitys.Models;
-
-namespace Entity.DataTransferObjects.Learning;
+﻿namespace Entity.DataTransferObjects.Learning;
 
 public record CourseDto(
-    MultiLanguageField title,
-    MultiLanguageField description,
+    string title,
+    string description,
+    string languageCode,
     int authorId,
     int categoryId,
-    int orderNumber,
-    List<string> docsUrl,
-    string image,
-    List<int> hashtagId);
+    string image);

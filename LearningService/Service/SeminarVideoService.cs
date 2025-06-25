@@ -7,22 +7,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningService.Service;
 
-public class SeminarVideoService : ISeminarVideoService
+public class SeminarVideoService(
+    ICategoryRepository categoryRepository,
+    ISeminarVideoRepository seminarVideoRepository)
+    : ISeminarVideoService
 {
-    private readonly ISeminarVideoRepository _seminarVideoRepository;
-    private readonly ICategoryRepository _categoryRepository;
-    private readonly IHashtagRepository _hashtagRepository;
-
-    public SeminarVideoService(
-        ICategoryRepository categoryRepository,
-        ISeminarVideoRepository seminarVideoRepository,
-        IHashtagRepository hashtagRepository)
-    {
-        _categoryRepository = categoryRepository;
-        _seminarVideoRepository = seminarVideoRepository;
-        _hashtagRepository = hashtagRepository;
-    }
-
     public async ValueTask<SeminarVideo> CreateSeminarVideoAsync(SeminarVideoDto seminarVideo)
     {
         var nwCourse = new SeminarVideo()
@@ -30,11 +19,10 @@ public class SeminarVideoService : ISeminarVideoService
             Title = seminarVideo.title,
             VideoLinc = seminarVideo.videoLinc,
             AuthorId =seminarVideo.authorId,
-            HashtagId = seminarVideo.hashtagId,
             CategoryId = seminarVideo.categoryId,
         };
 
-        return await _seminarVideoRepository.AddAsync(nwCourse);
+        return await seminarVideoRepository.AddAsync(nwCourse);
     }
 
     public async ValueTask<Category> CreateSeminarVideoCategoryAsync(CategoryDto seminarVideoCategory)
@@ -43,30 +31,30 @@ public class SeminarVideoService : ISeminarVideoService
         {        
             Title = seminarVideoCategory.title,
             Description =seminarVideoCategory.description,
-            ImageLinc = seminarVideoCategory.imageLinc
+            ImageLink = seminarVideoCategory.imageLink
         };
-        return await _categoryRepository.AddAsync(nwCategory);
+        return await categoryRepository.AddAsync(nwCategory);
     }
 
     public async ValueTask<SeminarVideo> DeleteSeminarVideoAsync(int seminarVideoId)
     {
-        var articleResult = await _seminarVideoRepository.GetByIdAsync(seminarVideoId)
+        var articleResult = await seminarVideoRepository.GetByIdAsync(seminarVideoId)
             ?? throw new NotFoundException("Logotype not found");
 
-        return await _seminarVideoRepository.RemoveAsync(articleResult);
+        return await seminarVideoRepository.RemoveAsync(articleResult);
     }
 
     public async ValueTask<Category> DeleteSeminarVideoCategoryAsync(int categoryId)
     {
-        var articleResult = await _categoryRepository.GetByIdAsync(categoryId)
+        var articleResult = await categoryRepository.GetByIdAsync(categoryId)
                             ?? throw new NotFoundException("Logotype not found");
 
-        return await _categoryRepository.RemoveAsync(articleResult);
+        return await categoryRepository.RemoveAsync(articleResult);
     }
 
     public async ValueTask<IList<SeminarVideo>> GetAllSeminarVideoAsync(MetaQueryModel metaQuery)
     {
-        var seminarVideos = await _seminarVideoRepository
+        var seminarVideos = await seminarVideoRepository
            .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
            .Skip(metaQuery.Skip)
            .Take(metaQuery.Take)
@@ -77,30 +65,17 @@ public class SeminarVideoService : ISeminarVideoService
                VideoLinc = sv.VideoLinc,
                Title = sv.Title,
                AuthorId = sv.AuthorId,
-               HashtagId = sv.HashtagId,
-               Category = new Category(){Id = sv.Category!.Id,Title = sv.Category.Title,ImageLinc = sv.Category.ImageLinc,Description = sv.Category.Description},
-               Author = new Author(){Id = sv.Author!.Id,Name = sv.Author.Name,ImageLinc = sv.Author.ImageLinc}
+               Category = new Category(){Id = sv.Category!.Id,Title = sv.Category.Title,ImageLink = sv.Category.ImageLink,Description = sv.Category.Description},
+               Author = new Author(){Id = sv.Author!.Id,Name = sv.Author.Name,ImageLink = sv.Author.ImageLink}
            })
            .ToListAsync();
-        
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-        
-        foreach (var res in seminarVideos)
-        {
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
 
         return seminarVideos;
     }
 
     public async ValueTask<IList<SeminarVideo>> GetAllSeminarVideoByAuthorIdAsync(MetaQueryModel metaQuery, int authorId)
     {
-        var newSeminars = await _seminarVideoRepository
+        var newSeminars = await seminarVideoRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
             .Where(x => x.AuthorId == authorId)
             .Skip(metaQuery.Skip)
@@ -111,35 +86,19 @@ public class SeminarVideoService : ISeminarVideoService
                 VideoLinc = seminar.VideoLinc,
                 Title = seminar.Title,
                 AuthorId = seminar.AuthorId,
-                Author = new Author() { Id = seminar.Author.Id, Name = seminar.Author.Name, ImageLinc = seminar.Author.ImageLinc  },
+                Author = new Author() { Id = seminar.Author.Id, Name = seminar.Author.Name, ImageLink = seminar.Author.ImageLink  },
                 CategoryId = seminar.CategoryId,
-                Category = new Category() { Id = seminar.Category.Id, Title = seminar.Category.Title, ImageLinc = seminar.Category.ImageLinc },
-                HashtagId = seminar.HashtagId
-
+                Category = new Category() { Id = seminar.Category.Id, Title = seminar.Category.Title, ImageLink = seminar.Category.ImageLink },
             })
             .ToListAsync();
-
-        var hashtags = await _hashtagRepository
-                .GetAllAsQueryable(true)
-                .ToDictionaryAsync(ht => ht.Id);
-
-        foreach (var res in newSeminars)
-        {
-            if (res.HashtagId is null) continue;
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
-
+        
         return newSeminars;
     }
 
     public async ValueTask<IList<SeminarVideo>> GetAllSeminarVideoByHashtagIdAsync(MetaQueryModel metaQuery, int hashtagId)
     {
-        var newSeminars = await _seminarVideoRepository
+        var newSeminars = await seminarVideoRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-            .Where(x => x.HashtagId.Any(y => y == hashtagId))
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
             .Select(seminar => new SeminarVideo()
@@ -148,33 +107,19 @@ public class SeminarVideoService : ISeminarVideoService
                 VideoLinc = seminar.VideoLinc,
                 Title = seminar.Title,
                 AuthorId = seminar.AuthorId,
-                Author = new Author() { Id = seminar.Author.Id, Name = seminar.Author.Name, ImageLinc = seminar.Author.ImageLinc },
+                Author = new Author() { Id = seminar.Author.Id, Name = seminar.Author.Name, ImageLink = seminar.Author.ImageLink },
                 CategoryId = seminar.CategoryId,
-                Category = new Category() { Id = seminar.Category.Id, Title = seminar.Category.Title, ImageLinc = seminar.Category.ImageLinc },
-                HashtagId = seminar.HashtagId
+                Category = new Category() { Id = seminar.Category.Id, Title = seminar.Category.Title, ImageLink = seminar.Category.ImageLink },
 
             })
             .ToListAsync();
-
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-
-        foreach (var res in newSeminars)
-        {
-            if (res.HashtagId is null) continue;
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
 
         return newSeminars;
     }
 
     public async ValueTask<IList<Category>> GetAllSeminarVideoCategoryAsync(MetaQueryModel metaQuery)
     {
-        var articles = await _categoryRepository
+        var articles = await categoryRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
@@ -184,12 +129,12 @@ public class SeminarVideoService : ISeminarVideoService
 
     public async ValueTask<Category> GetCategoryById(int id)
     {
-        return await _categoryRepository.GetByIdAsync(id);
+        return await categoryRepository.GetByIdAsync(id);
     }
 
     public async ValueTask<IList<SeminarVideo>> GetSeminarVideoByCategoryIdAsync(MetaQueryModel metaQuery, int categoryId)
     {
-        var seminars = await _seminarVideoRepository
+        var seminars = await seminarVideoRepository
              .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
              .Where(vc => vc.CategoryId == categoryId)
              .Skip(metaQuery.Skip)
@@ -200,32 +145,18 @@ public class SeminarVideoService : ISeminarVideoService
                  VideoLinc = seminar.VideoLinc,
                  Title = seminar.Title,
                  AuthorId = seminar.AuthorId,
-                 Author = new Author() { Id = seminar.Author.Id, Name = seminar.Author.Name, Content = seminar.Author.Content, ImageLinc = seminar.Author.ImageLinc },
+                 Author = new Author() { Id = seminar.Author.Id, Name = seminar.Author.Name, Content = seminar.Author.Content, ImageLink = seminar.Author.ImageLink },
                  CategoryId = seminar.CategoryId,
-                 Category = new Category() { Id = seminar.Category.Id,  Title = seminar.Category.Title, Description = seminar.Category.Description, ImageLinc = seminar.Category.ImageLinc },
-                 HashtagId = seminar.HashtagId
-
+                 Category = new Category() { Id = seminar.Category.Id,  Title = seminar.Category.Title, Description = seminar.Category.Description, ImageLink = seminar.Category.ImageLink },
              })
              .ToListAsync();
 
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-
-        foreach (var res in seminars)
-        {
-            if (res.HashtagId is null) continue;
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
         return seminars;
     }
 
     public async ValueTask<IList<SeminarVideoForWhithDetaileDto>> GetSeminarVideoWithDetailsAsync(MetaQueryModel metaQuery)
     {
-        var articles = _seminarVideoRepository
+        var articles = seminarVideoRepository
                 .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
                 .Skip(metaQuery.Skip)
                 .Take(metaQuery.Take)
@@ -237,50 +168,32 @@ public class SeminarVideoService : ISeminarVideoService
             title = x.Title,
             author = x.Author,
             category = x.Category,
-            videoLinc = x.VideoLinc,
-            hashtagId = x.HashtagId,
-            hashtags = new List<Hashtag>()
+            videoLinc = x.VideoLinc
         }).ToList();
-
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable()
-            .ToListAsync();
-
-        var hashtagsDic = hashtags.ToDictionary(hashtag => hashtag.Id);
-
-        foreach (var res in result)
-        {
-            foreach (var value in from item in res.hashtagId where hashtagsDic.ContainsKey(item) select hashtagsDic[item])
-            {
-                res.hashtags.Add(value);
-            }
-        }
 
         return result;
     }
 
     public async ValueTask<SeminarVideo> UpdateSeminarVideoAsync(SeminarVideo seminarVideo)
     {
-        var result = await _seminarVideoRepository.GetByIdAsync(seminarVideo.Id)
+        var result = await seminarVideoRepository.GetByIdAsync(seminarVideo.Id)
            ?? throw new NotFoundException("Logotype not found");
         result.Title = seminarVideo.Title ?? result.Title;
         result.VideoLinc = seminarVideo.VideoLinc ?? result.VideoLinc;
         result.CategoryId = seminarVideo.CategoryId != 0 ? seminarVideo.CategoryId : result.CategoryId;
         result.AuthorId = seminarVideo.AuthorId != 0 ? seminarVideo.AuthorId : result.AuthorId;
-        result.HashtagId = seminarVideo.HashtagId ?? result.HashtagId;
 
-        return await _seminarVideoRepository .UpdateAsync(result);
+        return await seminarVideoRepository .UpdateAsync(result);
     }
 
     public async ValueTask<Category> UpdateSeminarVideoCategoryAsync(Category seminarVideoCategory)
     {
-        var result = await _categoryRepository.GetByIdAsync(seminarVideoCategory.Id)
+        var result = await categoryRepository.GetByIdAsync(seminarVideoCategory.Id)
                            ?? throw new NotFoundException("Logotype not found");
 
         result.Title = seminarVideoCategory?.Title ?? result.Title;
         result.Description = seminarVideoCategory.Description ?? result.Description;
-        result.ImageLinc = seminarVideoCategory?.ImageLinc ?? result.ImageLinc;
 
-        return await _categoryRepository .UpdateAsync(result);
+        return await categoryRepository .UpdateAsync(result);
     }
 }

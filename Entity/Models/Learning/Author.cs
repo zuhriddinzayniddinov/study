@@ -7,11 +7,11 @@ namespace Entity.Models.Learning;
 public class Author : ModelBase<int>
 {
     [Column("name")]
-    public MultiLanguageField Name { get; set; }
+    public string Name { get; set; }
     [Column("content")]
-    public MultiLanguageField? Content { get; set; }
-    [Column("image_linc")] 
-    public string ImageLinc { get; set; }
+    public string Content { get; set; }
+    [Column("image_link")] 
+    public string ImageLink { get; set; }
 
     [Column("user_id")]
     [ForeignKey(nameof(User))]

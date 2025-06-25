@@ -12,5 +12,4 @@ public class ArticleForWithDetailsDto
     public Author author { get; set; }
     public Category category { get; set; }
     public List<int> hashtagIds { get; set; }
-    public List<Hashtag> hashtags { get; set; }
 }

@@ -7,47 +7,38 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningService.Service;
 
-public class CourseService : ICourseService
+public class CourseService(
+    ICourseRepository courseRepository)
+    : ICourseService
 {
-    private readonly ICourseRepository _courseRepository;
-    private readonly IHashtagRepository _hashtagRepository;
-    public CourseService(ICourseRepository courseRepository,
-        IHashtagRepository hashtagRepository)
+    public async Task<Course> CreateCourseAsync(CourseDto courseDto, int userId)
     {
-        _courseRepository = courseRepository;
-        _hashtagRepository = hashtagRepository;
-    }
-
-    public async ValueTask<Course> CreateCourseAsync(CourseDto courseDto)
-    {
-        var newCourse = new Course()
+        var newCourse = new Course
         {
             Title = courseDto.title,
+            Description = courseDto.description,
+            Image = courseDto.image,
+            LanguageCode = courseDto.languageCode,
             AuthorId = courseDto.authorId,
             CategoryId = courseDto.categoryId,
-            Description = courseDto.description,
-            DocsUrl = courseDto.docsUrl,
-            Image = courseDto.image,
-            OrderNumber = courseDto.orderNumber,
-            HashtagId = courseDto.hashtagId
+            CreatedBy = userId,
         };
 
-        return await _courseRepository.AddAsync(newCourse);
+        return await courseRepository.AddAsync(newCourse);
     }
-
-    public async ValueTask<Course> DeleteCourseAsync(int courseId)
+    public async Task<Course> DeleteCourseAsync(int courseId, int userId)
     {
-        var courseResult = await _courseRepository.GetByIdAsync(courseId)
+        var courseResult = await courseRepository.GetByIdAsync(courseId)
             ?? throw new NotFoundException("Not found");
+        
+        courseResult.UpdatedBy = userId;
 
-        return await _courseRepository.RemoveAsync(courseResult);
+        return await courseRepository.RemoveAsync(courseResult);
     }
-
-    public async ValueTask<IList<Course>> GetAllCourseAsync(MetaQueryModel metaQuery)
+    public async Task<IList<Course>> GetAllCourseAsync(MetaQueryModel metaQuery)
     {
-        var courses = await _courseRepository
+        var courses = await courseRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-            .OrderBy(c => c.OrderNumber)
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
             .Select(c => new Course()
@@ -56,38 +47,20 @@ public class CourseService : ICourseService
                 Title = c.Title,
                 Description = c.Description,
                 Image = c.Image,
-                OrderNumber = c.OrderNumber,
+                LanguageCode = c.LanguageCode,
                 AuthorId = c.AuthorId,
-                Author = new Author(){Id = c.Author.Id,Name = c.Author.Name,Content = c.Author.Content,ImageLinc = c.Author.ImageLinc},
+                Author = new Author(){Id = c.Author.Id,Name = c.Author.Name,Content = c.Author.Content,ImageLink = c.Author.ImageLink},
                 CategoryId = c.CategoryId,
-                Category = new Category(){Id = c.Category.Id,Title = c.Category.Title,Description = c.Category.Description,ImageLinc = c.Category.ImageLinc},
-                Quiz = new Quiz(){Id = c.Quiz.Id,Title = c.Quiz.Title,Description = c.Quiz.Description,Duration = c.Quiz.Duration,TotalScore = c.Quiz.TotalScore,PassingScore = c.Quiz.PassingScore,Heart = c.Quiz.Heart},
-                DocsUrl = c.DocsUrl,
-                HashtagId = c.HashtagId
+                Category = new Category(){Id = c.Category.Id,Title = c.Category.Title,Description = c.Category.Description,ImageLink = c.Category.ImageLink},
             })
             .ToListAsync();
-        
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-        
-        foreach (var res in courses)
-        {
-            if (res.HashtagId is null) continue;
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
 
         return courses;
     }
-    
-    public async ValueTask<IList<Course>> GetAllCourseByCategoryIdAsync(MetaQueryModel metaQuery,int categoryId)
+    public async Task<IList<Course>> GetAllCourseByCategoryIdAsync(MetaQueryModel metaQuery,int categoryId)
     {
-        var courses = await _courseRepository
+        var courses = await courseRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-            .OrderBy(c => c.OrderNumber)
             .Where(c => c.CategoryId == categoryId)
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
@@ -97,38 +70,20 @@ public class CourseService : ICourseService
                 Title = c.Title,
                 Description = c.Description,
                 Image = c.Image,
-                OrderNumber = c.OrderNumber,
+                LanguageCode = c.LanguageCode,
                 AuthorId = c.AuthorId,
-                Author = new Author(){Id = c.Author.Id,Name = c.Author.Name,Content = c.Author.Content,ImageLinc = c.Author.ImageLinc},
+                Author = new Author(){Id = c.Author.Id,Name = c.Author.Name,Content = c.Author.Content,ImageLink = c.Author.ImageLink},
                 CategoryId = c.CategoryId,
-                Category = new Category(){Id = c.Category.Id,Title = c.Category.Title,Description = c.Category.Description,ImageLinc = c.Category.ImageLinc},
-                Quiz = new Quiz(){Id = c.Quiz.Id,Title = c.Quiz.Title,Description = c.Quiz.Description,Duration = c.Quiz.Duration,TotalScore = c.Quiz.TotalScore,PassingScore = c.Quiz.PassingScore,Heart = c.Quiz.Heart},
-                DocsUrl = c.DocsUrl,
-                HashtagId = c.HashtagId
+                Category = new Category(){Id = c.Category.Id,Title = c.Category.Title,Description = c.Category.Description,ImageLink = c.Category.ImageLink},
             })
             .ToListAsync();
-        
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-        
-        foreach (var res in courses)
-        {
-            if (res.HashtagId is null) continue;
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
 
         return courses;
     }
-
-    public async ValueTask<IList<Course>> GetAllCourseByAuthorIdAsync(MetaQueryModel metaQuery, int authorId)
+    public async Task<IList<Course>> GetAllCourseByAuthorIdAsync(MetaQueryModel metaQuery, int authorId)
     {
-        var newCourse = await _courseRepository
+        var newCourse = await courseRepository
            .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-           .OrderBy(c => c.OrderNumber)
            .Where(x => x.AuthorId == authorId)
            .Skip(metaQuery.Skip)
            .Select(c => new Course()
@@ -137,39 +92,20 @@ public class CourseService : ICourseService
                Title = c.Title,
                Description = c.Description,
                Image = c.Image,
-               OrderNumber = c.OrderNumber,
                AuthorId = c.AuthorId,
-               Author = new Author() { Id = c.Author.Id, Name = c.Author.Name, ImageLinc = c.Author.ImageLinc },
+               Author = new Author() { Id = c.Author.Id, Name = c.Author.Name, ImageLink = c.Author.ImageLink },
                CategoryId = c.CategoryId,
-               Category = new Category() { Id = c.Category.Id, Title = c.Category.Title, ImageLinc = c.Category.ImageLinc },
-               Quiz = new Quiz(){Id = c.Quiz.Id,Title = c.Quiz.Title,Description = c.Quiz.Description,Duration = c.Quiz.Duration,TotalScore = c.Quiz.TotalScore,PassingScore = c.Quiz.PassingScore,Heart = c.Quiz.Heart},
-               DocsUrl = c.DocsUrl,
-               HashtagId = c.HashtagId
+               Category = new Category() { Id = c.Category.Id, Title = c.Category.Title, ImageLink = c.Category.ImageLink },
            })
            .Take(metaQuery.Take)
            .ToListAsync();
-
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-
-        foreach (var res in newCourse)
-        {
-            if (res.HashtagId is null) continue;
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
+        
         return newCourse;
     }
-
-    public async ValueTask<IList<Course>> GetAllCourseByHashtagIdAsync(MetaQueryModel metaQuery, int hashtagId)
+    public async Task<IList<Course>> GetAllCourseByHashtagIdAsync(MetaQueryModel metaQuery, int hashtagId)
     {
-        var newCourse = await _courseRepository
+        var newCourse = await courseRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-            .OrderBy(c => c.OrderNumber)
-            .Where(x => x.HashtagId.Any(y => y == hashtagId))
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
             .Select(c => new Course()
@@ -178,36 +114,19 @@ public class CourseService : ICourseService
                 Title = c.Title,
                 Description = c.Description,
                 Image = c.Image,
-                OrderNumber = c.OrderNumber,
+                LanguageCode = c.LanguageCode,
                 AuthorId = c.AuthorId,
-                Author = new Author() { Id = c.Author.Id, Name = c.Author.Name,  ImageLinc = c.Author.ImageLinc },
+                Author = new Author() { Id = c.Author.Id, Name = c.Author.Name,  ImageLink = c.Author.ImageLink },
                 CategoryId = c.CategoryId,
-                Category = new Category() { Id = c.Category.Id, Title = c.Category.Title, ImageLinc = c.Category.ImageLinc },
-                Quiz = new Quiz(){Id = c.Quiz.Id,Title = c.Quiz.Title,Description = c.Quiz.Description,Duration = c.Quiz.Duration,TotalScore = c.Quiz.TotalScore,PassingScore = c.Quiz.PassingScore,Heart = c.Quiz.Heart},
-                DocsUrl = c.DocsUrl,
-                HashtagId = c.HashtagId
+                Category = new Category() { Id = c.Category.Id, Title = c.Category.Title, ImageLink = c.Category.ImageLink },
             })
             .ToListAsync();
 
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-
-        foreach (var res in newCourse)
-        {
-            if (res.HashtagId is null) continue;
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
-
         return newCourse;
     }
-
-    public async ValueTask<Course> GetCourseByIdAsync(int id)
+    public async Task<Course> GetCourseByIdAsync(int id)
     {
-        var courseResult = await _courseRepository
+        var courseResult = await courseRepository
                 .GetAllAsQueryable(true)
                 .Select(c => new Course()
                 {
@@ -215,39 +134,30 @@ public class CourseService : ICourseService
                     Title = c.Title,
                     Description = c.Description,
                     Image = c.Image,
-                    OrderNumber = c.OrderNumber,
+                    LanguageCode = c.LanguageCode,
                     AuthorId = c.AuthorId,
-                    Author = new Author(){Id = c.Author.Id,Name = c.Author.Name,Content = c.Author.Content,ImageLinc = c.Author.ImageLinc},
+                    Author = new Author(){Id = c.Author.Id,Name = c.Author.Name,Content = c.Author.Content,ImageLink = c.Author.ImageLink},
                     CategoryId = c.CategoryId,
-                    Category = new Category(){Id = c.Category.Id,Title = c.Category.Title,Description = c.Category.Description,ImageLinc = c.Category.ImageLinc},
-                    Quiz = new Quiz(){Id = c.Quiz.Id,Title = c.Quiz.Title,Description = c.Quiz.Description,Duration = c.Quiz.Duration,TotalScore = c.Quiz.TotalScore,PassingScore = c.Quiz.PassingScore,Heart = c.Quiz.Heart},
-                    DocsUrl = c.DocsUrl,
-                    HashtagId = c.HashtagId
+                    Category = new Category(){Id = c.Category.Id,Title = c.Category.Title,Description = c.Category.Description,ImageLink = c.Category.ImageLink},
                 })
                 .FirstOrDefaultAsync(c => c.Id == id)
             ?? throw new NotFoundException("Not found");
 
-        courseResult.Hashtags = await _hashtagRepository.GetAllAsQueryable(true)
-            .Where(ht => courseResult.HashtagId.Contains(ht.Id))
-            .ToListAsync();
-        
          return courseResult;
     }
-
-    public async ValueTask<Course> UpdateCourseAsync(Course course)
+    public async Task<Course> UpdateCourseAsync(Course course, int userId)
     {
-        var courseResult = await _courseRepository.GetByIdAsync(course.Id)
+        var courseResult = await courseRepository.GetByIdAsync(course.Id)
             ?? throw new NotFoundException("Not found");
 
         courseResult.Title = course.Title ?? courseResult.Title;
         courseResult.Description = course.Description ?? courseResult.Description;
-        courseResult.DocsUrl = course.DocsUrl ?? courseResult.DocsUrl;
         courseResult.Image = course.Image ?? courseResult.Image;
+        courseResult.LanguageCode = course.LanguageCode ?? courseResult.LanguageCode;
         courseResult.AuthorId = (course.AuthorId != 0) ? course.AuthorId : courseResult.AuthorId;
-        courseResult.OrderNumber = (course.OrderNumber != 0) ? course.OrderNumber : courseResult.OrderNumber;
         courseResult.CategoryId = (course.CategoryId != 0) ? course.CategoryId : courseResult.CategoryId;
-        courseResult.HashtagId = (course.HashtagId.Count != 0) ? course.HashtagId : courseResult.HashtagId;
+        courseResult.UpdatedBy = userId;
         
-        return await _courseRepository.UpdateAsync(courseResult);
+        return await courseRepository.UpdateAsync(courseResult);
     }
 }

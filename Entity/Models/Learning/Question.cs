@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Entity.Enum;
+using Entity.Models.Common;
 using Entitys.Models;
 
 namespace Entity.Models.Learning;

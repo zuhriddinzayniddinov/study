@@ -1,5 +1,6 @@
 using Entitys.Models;
 using System.ComponentModel.DataAnnotations.Schema;
+using Entity.Models.Common;
 
 namespace Entity.Models.Learning;
 
@@ -7,13 +8,13 @@ namespace Entity.Models.Learning;
 public class Article : AuditableModelBase<int>
 {
     [Column("title")]
-    public MultiLanguageField Title { get; set; }
+    public string Title { get; set; }
 
     [Column("description")]
-    public MultiLanguageField Description { get; set; }
+    public string Description { get; set; }
 
     [Column("content")]
-    public MultiLanguageField Content { get; set; }
+    public string Content { get; set; }
 
     [Column("image")]
     public string  Image { get; set; }
@@ -27,8 +28,4 @@ public class Article : AuditableModelBase<int>
     [ForeignKey(nameof(Category))]
     public int CategoryId { get; set; }
     public virtual Category? Category { get; set; }
-
-    [Column("hashtag_id")]
-    public List<int> HashtagId { get; set; }
-    [NotMapped] public List<Hashtag>? Hashtags { get; set; } = new List<Hashtag>();
 }

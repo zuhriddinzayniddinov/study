@@ -1,13 +1,15 @@
-using Entity.DataTransferObjects.Learning;
 using Entity.Enum;
 using Entity.Models;
+using Entity.Models.Common;
 using Entity.Models.Learning;
 using Entity.Models.StaticFiles;
 using Entitys.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+using Author = Entity.Models.Learning.Author;
+using Exam = Entity.Models.Learning.Exam;
+using Quiz = Entity.Models.Learning.Quiz;
 
-namespace DatabaseBroker.Context;
+namespace DatabaseBroker.DataContext;
 
 public class PortalDataContext : DbContext
 {
@@ -116,12 +118,6 @@ public class PortalDataContext : DbContext
             .HasOne(x => x.UserCerifiticate)
             .WithOne(x => x.Owner)
             .HasForeignKey<UserCertificate>(x => x.OwnerId);
-        
-        modelBuilder
-            .Entity<Course>()
-            .HasOne(x => x.Quiz)
-            .WithOne(x => x.Course)
-            .HasForeignKey<Quiz>(x => x.CourseId);
 
         modelBuilder.Entity<Author>()
             .HasMany(a => a.Courses)
@@ -156,7 +152,6 @@ public class PortalDataContext : DbContext
     public DbSet<SeminarVideo> VideoCourse { get; set; }
     public DbSet<Category> VideoCourseCategory { get; set; }
     public DbSet<Author> Authors { get; set; }
-    public DbSet<Hashtag> Hashtag { get; set; }
     public DbSet<ShortVideo> ShortVideo { get; set; }
     public DbSet<Course> Courses { get; set; }
     public DbSet<VideoOfCourse> VideoOfCourses { get; set; }
@@ -164,5 +159,4 @@ public class PortalDataContext : DbContext
     public DbSet<Question> Questions { get; set; }
     public DbSet<Exam> Exams { get; set; }
     public DbSet<QuestionInExam> QuestionInExams { get; set; }
-    public DbSet<AuthorToCategory> AuthorToCategories { get; set; }
 }

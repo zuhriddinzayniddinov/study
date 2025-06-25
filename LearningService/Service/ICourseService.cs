@@ -2,17 +2,16 @@ using Entity.DataTransferObjects.Learning;
 using Entity.Models.ApiModels;
 using Entity.Models.Learning;
 
-namespace LearningService.Service
+namespace LearningService.Service;
+
+public interface ICourseService
 {
-    public interface ICourseService
-    {
-        ValueTask<Course> CreateCourseAsync(CourseDto courseDto);
-        ValueTask<Course> UpdateCourseAsync(Course course);
-        ValueTask<Course> DeleteCourseAsync(int courseId);
-        ValueTask<Course> GetCourseByIdAsync(int id);
-        ValueTask<IList<Course>> GetAllCourseAsync(MetaQueryModel metaQuery);
-        ValueTask<IList<Course>> GetAllCourseByAuthorIdAsync(MetaQueryModel metaQuery,int authorId);
-        ValueTask<IList<Course>> GetAllCourseByHashtagIdAsync(MetaQueryModel metaQuery, int hashtagId);
-        ValueTask<IList<Course>> GetAllCourseByCategoryIdAsync(MetaQueryModel metaQuery, int categoryId);
-    }
+    Task<Course> CreateCourseAsync(CourseDto courseDto, int userId);
+    Task<Course> UpdateCourseAsync(Course course, int userId);
+    Task<Course> DeleteCourseAsync(int courseId, int userId);
+    Task<Course> GetCourseByIdAsync(int id);
+    Task<IList<Course>> GetAllCourseAsync(MetaQueryModel metaQuery);
+    Task<IList<Course>> GetAllCourseByAuthorIdAsync(MetaQueryModel metaQuery,int authorId);
+    Task<IList<Course>> GetAllCourseByHashtagIdAsync(MetaQueryModel metaQuery, int hashtagId);
+    Task<IList<Course>> GetAllCourseByCategoryIdAsync(MetaQueryModel metaQuery, int categoryId);
 }

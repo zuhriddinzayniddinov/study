@@ -11,7 +11,6 @@ public static class ServiceCollectionExtension
         services.AddScoped <ISeminarVideoService, SeminarVideoService>();
         services.AddScoped <IShortVideoService, ShortVideoService>();
         services.AddScoped <IAuthorService, AuthorService>();
-        services.AddScoped <IHashtagService, HashtagService>();
         services.AddScoped <ICourseService, CourseService>();
         services.AddScoped <IVideoOfCourseService, VideoOfCourseService>();
         services.AddScoped <IQuizService, QuizService>();
@@ -25,7 +24,6 @@ public static class ServiceCollectionExtension
         services.AddScoped <IArticleRepository, ArticleRepository>();
         services.AddScoped <ISeminarVideoRepository, SeminarVideoRepository>();
         services.AddScoped <ICategoryRepository, CategoryRepository>();
-        services.AddScoped <IHashtagRepository, HashtagRepository>();
         services.AddScoped <IAuthorRepository, AuthorRepository>();
         services.AddScoped <IShortVideoRepository, ShortVideoRepository>();
         services.AddScoped <ICourseRepository, CourseRepository>();

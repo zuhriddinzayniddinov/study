@@ -5,9 +5,9 @@ namespace LearningService.Service;
 
 public interface IAuthorService
 {
-    ValueTask<Author> CreateAuthorAsync(AuthorDto article);
-    ValueTask<Author> UpdateAuthorAsync(AuthorDto article);
-    ValueTask<Author> DeleteAuthorAsync(int articleId);
-    ValueTask<AuthorDto> GetAuthorByIdAsync(int id);
-    ValueTask<IList<AuthorDto>> GetAllAuthorAsync();
+    Task<Author> CreateAuthorAsync(AuthorDto article, int userId);
+    Task<Author> UpdateAuthorAsync(AuthorDto article, int userId);
+    Task<Author> DeleteAuthorAsync(int articleId,  int userId);
+    Task<AuthorDto> GetAuthorByIdAsync(int id);
+    Task<IList<AuthorDto>> GetAllAuthorAsync();
 }

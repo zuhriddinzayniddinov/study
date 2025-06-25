@@ -7,19 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningService.Service;
 
-public class ArticleService : IArticleService
+public class ArticleService(IArticleRepository articleRepository) : IArticleService
 {
-    private readonly IArticleRepository _articleRepository;
-    private readonly IHashtagRepository _hashtagRepository;
-
-    public ArticleService(IArticleRepository articleRepository, 
-        IHashtagRepository hashtagRepository)
-    {
-        _articleRepository = articleRepository;
-        _hashtagRepository = hashtagRepository;
-    }
-
-    public async ValueTask<Article> CreateArticleAsync(ArticleDto article)
+    public async Task<Article> CreateArticleAsync(ArticleDto article)
     {
         var newArticle = new Article()
         {
@@ -29,23 +19,22 @@ public class ArticleService : IArticleService
             Image = article.image,
             AuthorId =article.authorId,
             CategoryId = article.categoryId,
-            HashtagId = article.hashtagId,
         };
 
-        return await _articleRepository.AddAsync(newArticle);
+        return await articleRepository.AddAsync(newArticle);
     }
 
-    public async ValueTask<Article> DeleteArticleAsync(int articleId)
+    public async Task<Article> DeleteArticleAsync(int articleId)
     {
-        var articleResult = await _articleRepository.GetByIdAsync(articleId)
+        var articleResult = await articleRepository.GetByIdAsync(articleId)
             ?? throw new NotFoundException("Logotype not found");
 
-        return await _articleRepository.RemoveAsync(articleResult);
+        return await articleRepository.RemoveAsync(articleResult);
     }
 
-    public async ValueTask<IList<Article>> GetAllArticleAsync(MetaQueryModel metaQuery)
+    public async Task<IList<Article>> GetAllArticleAsync(MetaQueryModel metaQuery)
     {
-        var articles = await _articleRepository
+        var articles = await articleRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
@@ -57,31 +46,18 @@ public class ArticleService : IArticleService
                 Content = a.Content,
                 Image = a.Image,
                 AuthorId = a.AuthorId,
-                Author = new Author(){Id = a.Author.Id,Name = a.Author.Name,ImageLinc = a.Author.ImageLinc,Content = a.Author.Content},
+                Author = new Author(){Id = a.Author.Id,Name = a.Author.Name,ImageLink = a.Author.ImageLink,Content = a.Author.Content},
                 CategoryId = a.CategoryId,
-                Category = new Category(){Id = a.Category.Id,Description = a.Category.Description,Title = a.Category.Title,ImageLinc = a.Category.ImageLinc},
-                HashtagId = a.HashtagId
+                Category = new Category(){Id = a.Category.Id,Description = a.Category.Description,Title = a.Category.Title,ImageLink = a.Category.ImageLink},
             })
             .ToListAsync();
-        
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-        
-        foreach (var res in articles)
-        {
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
 
         return articles;
     }
 
-    public async ValueTask<IList<Article>> GetAllArticleByCategoryIdAsync(MetaQueryModel metaQuery, int categoryId)
+    public async Task<IList<Article>> GetAllArticleByCategoryIdAsync(MetaQueryModel metaQuery, int categoryId)
     {
-        var articles = await _articleRepository
+        var articles = await articleRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
             .Where(a => a.CategoryId == categoryId)
             .Skip(metaQuery.Skip)
@@ -94,31 +70,18 @@ public class ArticleService : IArticleService
                 Content = a.Content,
                 Image = a.Image,
                 AuthorId = a.AuthorId,
-                Author = new Author(){Id = a.Author.Id,Name = a.Author.Name,ImageLinc = a.Author.ImageLinc,Content = a.Author.Content},
+                Author = new Author(){Id = a.Author.Id,Name = a.Author.Name,ImageLink = a.Author.ImageLink,Content = a.Author.Content},
                 CategoryId = a.CategoryId,
-                Category = new Category(){Id = a.Category.Id,Description = a.Category.Description,Title = a.Category.Title,ImageLinc = a.Category.ImageLinc},
-                HashtagId = a.HashtagId
+                Category = new Category(){Id = a.Category.Id,Description = a.Category.Description,Title = a.Category.Title,ImageLink = a.Category.ImageLink},
             })
             .ToListAsync();
-        
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-        
-        foreach (var res in articles)
-        {
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
 
         return articles;
     }
 
-    public async ValueTask<IList<ArticleForWithDetailsDto>> GetArticleWithDetailsAsync(MetaQueryModel metaQuery)
+    public async Task<IList<ArticleForWithDetailsDto>> GetArticleWithDetailsAsync(MetaQueryModel metaQuery)
     {
-        var articles = _articleRepository
+        var articles = articleRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
@@ -130,10 +93,9 @@ public class ArticleService : IArticleService
                 Content = a.Content,
                 Image = a.Image,
                 AuthorId = a.AuthorId,
-                Author = new Author(){Id = a.Author.Id,Name = a.Author.Name,ImageLinc = a.Author.ImageLinc,Content = a.Author.Content},
+                Author = new Author(){Id = a.Author.Id,Name = a.Author.Name,ImageLink = a.Author.ImageLink,Content = a.Author.Content},
                 CategoryId = a.CategoryId,
-                Category = new Category(){Id = a.Category.Id,Description = a.Category.Description,Title = a.Category.Title,ImageLinc = a.Category.ImageLinc},
-                HashtagId = a.HashtagId
+                Category = new Category(){Id = a.Category.Id,Description = a.Category.Description,Title = a.Category.Title,ImageLink = a.Category.ImageLink},
             })
             .ToList();
 
@@ -144,64 +106,38 @@ public class ArticleService : IArticleService
             content = x.Content,
             image = x.Image,
             author = x.Author,
-            category = x.Category,
-            hashtags = new List<Hashtag>(),
-            hashtagIds =x.HashtagId
+            category = x.Category
         }).ToList();
-
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable()
-            .ToListAsync();
-
-        Dictionary<int,Hashtag> hashtagsDic = new Dictionary<int,Hashtag>();
-        foreach (var hashtag in hashtags) 
-        {
-            hashtagsDic.Add(hashtag.Id, hashtag);
-        }
-
-        foreach (var res in result)
-        {
-            foreach(var item in res.hashtagIds)
-            {
-                if (hashtagsDic.ContainsKey(item))
-                {
-                    Hashtag value = hashtagsDic[item];
-                    res.hashtags.Add(value);
-                }
-            }
-        }
-
+        
         return result;
     }
     
-    public async ValueTask<Article> GetArticleByIdAsync(int id)
+    public async Task<Article> GetArticleByIdAsync(int id)
     {
-        var article = await _articleRepository.GetByIdAsync(id);
+        var article = await articleRepository.GetByIdAsync(id);
 
         return article;
     }
 
-    public async ValueTask<Article> UpdateArticleAsync(Article article)
+    public async Task<Article> UpdateArticleAsync(Article article)
     {
-        var articleResult = await _articleRepository.GetByIdAsync(article.Id)
+        var articleResult = await articleRepository.GetByIdAsync(article.Id)
             ?? throw new NotFoundException("Not found");
 
         articleResult.Title = article.Title ?? articleResult.Title;
         articleResult.Content = article.Content ?? articleResult.Content;
         articleResult.Description = article.Description ?? articleResult.Description;
         articleResult.Image = article.Image ?? articleResult.Image;
-        articleResult.HashtagId = article.HashtagId.Count is not 0 ? article.HashtagId : articleResult.HashtagId;
         articleResult.CategoryId = article.CategoryId is not 0 ? article.CategoryId : articleResult.CategoryId;
         articleResult.AuthorId = article.AuthorId is not 0 ? article.AuthorId : articleResult.AuthorId;
 
-        return await _articleRepository.UpdateAsync(articleResult);
+        return await articleRepository.UpdateAsync(articleResult);
     }
 
-    public async ValueTask<IList<Article>> GetAllArticleByHashtagIdAsync(MetaQueryModel metaQuery, int hashtagId)
+    public async Task<IList<Article>> GetAllArticleByHashtagIdAsync(MetaQueryModel metaQuery, int hashtagId)
     {
-        var newArticle = await _articleRepository
-            .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-            .Where(x => x.HashtagId.Any(y => y == hashtagId))
+        var newArticle = await articleRepository
+            .GetAllAsQueryable(deleted: metaQuery.IsDeleted)
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
             .Select(a => new Article()
@@ -212,33 +148,18 @@ public class ArticleService : IArticleService
                 Content = a.Content,
                 Image = a.Image,
                 AuthorId = a.AuthorId,
-                Author = new Author() { Id = a.Author.Id, Name = a.Author.Name, ImageLinc = a.Author.ImageLinc},
+                Author = new Author() { Id = a.Author.Id, Name = a.Author.Name, ImageLink = a.Author.ImageLink },
                 CategoryId = a.CategoryId,
-                Category = new Category() { Id = a.Category.Id,  Title = a.Category.Title, ImageLinc = a.Category.ImageLinc },
-                HashtagId = a.HashtagId
-            })
-            .ToListAsync();
-
-        var hashtags = await _hashtagRepository
-            .GetAllAsQueryable(true)
-            .ToDictionaryAsync(ht => ht.Id);
-
-        foreach (var res in newArticle)
-        {
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
-
-
+                Category = new Category()
+                    { Id = a.Category.Id, Title = a.Category.Title, ImageLink = a.Category.ImageLink },
+            }).ToListAsync();
 
         return newArticle;
     }
 
-    public async ValueTask<IList<Article>> GetAllArticleByAuthorIdAsync(MetaQueryModel metaQuery, int authorId)
+    public async Task<IList<Article>> GetAllArticleByAuthorIdAsync(MetaQueryModel metaQuery, int authorId)
     {
-        var newArticle = await _articleRepository
+        var newArticle = await articleRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
             .Where(x => x.AuthorId == authorId)
             .Skip(metaQuery.Skip)
@@ -251,23 +172,12 @@ public class ArticleService : IArticleService
                 Content = a.Content,
                 Image = a.Image,
                 AuthorId = a.AuthorId,
-                Author = new Author() { Id = a.Author.Id, Name = a.Author.Name, ImageLinc = a.Author.ImageLinc },
+                Author = new Author() { Id = a.Author.Id, Name = a.Author.Name, ImageLink = a.Author.ImageLink },
                 CategoryId = a.CategoryId,
-                Category = new Category() { Id = a.Category.Id, Title = a.Category.Title, ImageLinc = a.Category.ImageLinc },
-                HashtagId = a.HashtagId
+                Category = new Category() { Id = a.Category.Id, Title = a.Category.Title, ImageLink = a.Category.ImageLink },
             })
             .ToListAsync();
-        var hashtags = await _hashtagRepository
-             .GetAllAsQueryable(true)
-             .ToDictionaryAsync(ht => ht.Id);
-
-        foreach (var res in newArticle)
-        {
-            foreach (var item in res.HashtagId.Where(item => hashtags.ContainsKey(item)))
-            {
-                res.Hashtags?.Add(hashtags[item]);
-            }
-        }
+        
         return newArticle;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Entitys.Models;
 using System.ComponentModel.DataAnnotations.Schema;
+using Entity.Models.Common;
 
 namespace Entity.Models.Learning;
 
@@ -28,10 +29,6 @@ public class Course : AuditableModelBase<int>
     [ForeignKey(nameof(Category))]
     public int CategoryId { get; set; }
     public virtual Category? Category { get; set; }
-
-    [Column("hashtag_id")]
-    public List<int>? HashtagId { get; set; }
-    [NotMapped] public List<Hashtag>? Hashtags { get; set; } = new List<Hashtag>();
 
     public virtual ICollection<Module> Modules { get; set; } = new List<Module>();
 }

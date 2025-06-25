@@ -7,55 +7,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningService.Service;
 
-public class VideoOfCourseService : IVideoOfCourseService
+public class VideoOfCourseService(IVideoOfCourseRepository videoOfCourseRepository) : IVideoOfCourseService
 {
-    private readonly IVideoOfCourseRepository _videoOfCourseRepository;
-
-    public VideoOfCourseService(IVideoOfCourseRepository videoOfCourseRepository)
-    {
-        _videoOfCourseRepository = videoOfCourseRepository;
-    }
-
     public async ValueTask<VideoOfCourse> CreateVideoOfCourseAsync(VideosOfCourseDto videoOfCourse)
     {
         var  VideoOfCourse = new VideoOfCourse()
         {
-            VideoLinc =  videoOfCourse.videoLinc,
-            Title = videoOfCourse.title,
-            Content = videoOfCourse.content,
-            CourseId = videoOfCourse.courseId,
-            OrderNumber = videoOfCourse.orderNumber,
-            DocsUrl = videoOfCourse.docsUrl
+            Link =  videoOfCourse.videoLinc
         };
 
-        return await _videoOfCourseRepository.AddAsync(VideoOfCourse);
+        return await videoOfCourseRepository.AddAsync(VideoOfCourse);
     }
 
     public async ValueTask<VideoOfCourse> DeleteVideoOfCourseAsync(int id)
     {
-        var articleResult = await _videoOfCourseRepository.GetByIdAsync(id)
+        var articleResult = await videoOfCourseRepository.GetByIdAsync(id)
             ?? throw new NotFoundException("Logotype not found");
 
-        return await _videoOfCourseRepository.RemoveAsync(articleResult);
+        return await videoOfCourseRepository.RemoveAsync(articleResult);
     }
 
     public async ValueTask<IList<VideoOfCourse>> GetAllVideoOfCourseAsync(MetaQueryModel metaQuery)
     {
-        var articles = await _videoOfCourseRepository
+        var articles = await videoOfCourseRepository
            .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-           .OrderBy(x => x.OrderNumber)
            .Skip(metaQuery.Skip)
            .Take(metaQuery.Take)
            .Select(voc => new VideoOfCourse()
            {
                Id = voc.Id,
-               Content = voc.Content,
-               CourseId = voc.CourseId,
-               Title = voc.Title,
-               OrderNumber = voc.OrderNumber,
-               DocsUrl = voc.DocsUrl,
-               VideoLinc = voc.VideoLinc,
-               Course = new Course(){Id = voc.Course.Id, Title = voc.Course.Title, Description = voc.Course.Description}
            })
            .ToListAsync();
 
@@ -64,22 +44,13 @@ public class VideoOfCourseService : IVideoOfCourseService
 
     public async ValueTask<IList<VideoOfCourse>> GetVideoOfCourseByCourseIdAsync(MetaQueryModel metaQuery, int courseId)
     {
-        var result = await _videoOfCourseRepository
+        var result = await videoOfCourseRepository
             .GetAllAsQueryable(deleted:metaQuery.IsDeleted)
-            .Where(x  => x.CourseId == courseId)
-            .OrderBy(x => x.OrderNumber)
             .Skip(metaQuery.Skip)
             .Take(metaQuery.Take)
             .Select(voc => new VideoOfCourse()
             {
                 Id = voc.Id,
-                Content = voc.Content,
-                CourseId = voc.CourseId,
-                Title = voc.Title,
-                OrderNumber = voc.OrderNumber,
-                DocsUrl = voc.DocsUrl,
-                VideoLinc = voc.VideoLinc,
-                Course = new Course(){Id = voc.Course.Id, Title = voc.Course.Title, Description = voc.Course.Description}
             })
             .ToListAsync();
 
@@ -88,7 +59,7 @@ public class VideoOfCourseService : IVideoOfCourseService
 
     public async ValueTask<VideoOfCourse> GetVideoOfCourseByIdAsync(int id)
     {
-        var result = await _videoOfCourseRepository
+        var result = await videoOfCourseRepository
             .GetByIdAsync(id);
 
         return result;
@@ -96,16 +67,10 @@ public class VideoOfCourseService : IVideoOfCourseService
 
     public async ValueTask<VideoOfCourse> UpdateVideoOfCourseAsync(VideoOfCourse videoOfCourse)
     {
-        var result = await _videoOfCourseRepository.GetByIdAsync(videoOfCourse.Id)
+        var result = await videoOfCourseRepository.GetByIdAsync(videoOfCourse.Id)
             ?? throw new NotFoundException("Logotype not found");
+        
 
-        result.VideoLinc = videoOfCourse.VideoLinc ?? result.VideoLinc;
-        result.Title = videoOfCourse.Title ?? result.Title;
-        result.Content = videoOfCourse.Content ?? result.Content;
-        result.OrderNumber = videoOfCourse?.OrderNumber ?? result.OrderNumber;
-        result.CourseId = videoOfCourse.CourseId != 0 ? videoOfCourse.CourseId : result.CourseId;
-        result.DocsUrl = videoOfCourse.DocsUrl ?? result.DocsUrl;
-
-        return await _videoOfCourseRepository.UpdateAsync(result);
+        return await videoOfCourseRepository.UpdateAsync(result);
     }
 }

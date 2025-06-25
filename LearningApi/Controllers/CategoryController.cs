@@ -28,10 +28,8 @@ public class CategoryController : ApiControllerBase
     }
 
     [HttpGet]
-    public async ValueTask<ResponseModel> GetAllCategory([FromQuery] MetaQueryModel metaQuery)
+    public async Task<ResponseModel> GetAllCategory([FromQuery] MetaQueryModel metaQuery)
     {
-        if (Request.Query.Count == 0)
-            metaQuery.Take = 1000;
         return ResponseModel
             .ResultFromContent(await _seminarVideoService.GetAllSeminarVideoCategoryAsync(metaQuery));
     }

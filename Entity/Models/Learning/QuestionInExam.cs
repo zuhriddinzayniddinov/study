@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Entity.Enum;
+using Entity.Models.Common;
 
 namespace Entity.Models.Learning;
 [Table("question_in_exams",Schema = "learning")]

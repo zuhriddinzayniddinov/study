@@ -1,5 +1,4 @@
 using Entity.DataTransferObjects.Learning;
-using Entity.Models.Learning;
 using LearningService.Service;
 using Microsoft.AspNetCore.Mvc;
 using WebCore.Controllers;
@@ -9,20 +8,13 @@ namespace LearningApi.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-public class AuthorController : ApiControllerBase
+public class AuthorController(IAuthorService _authorService) : ApiControllerBase
 {
-    private readonly IAuthorService _authorService;
-
-    public AuthorController(IAuthorService authorService)
-    {
-        _authorService = authorService;
-    }
-
     [HttpPost]
     public async ValueTask<ResponseModel> CreateAuthor(AuthorDto author)
     {
         return ResponseModel
-            .ResultFromContent(await _authorService.CreateAuthorAsync(author));
+            .ResultFromContent(await _authorService.CreateAuthorAsync(author, UserId));
     }
 
     [HttpGet]
@@ -33,23 +25,23 @@ public class AuthorController : ApiControllerBase
     }
 
     [HttpGet]
-    public async ValueTask<ResponseModel> GetAuthorById(int id)
+    public async Task<ResponseModel> GetAuthorById(int id)
     {
         return ResponseModel
             .ResultFromContent(await _authorService.GetAuthorByIdAsync(id));
     }
 
     [HttpPut]
-    public async ValueTask<ResponseModel> UpdateAuthor(AuthorDto author)
+    public async Task<ResponseModel> UpdateAuthor(AuthorDto author)
     {
         return ResponseModel
-            .ResultFromContent(await _authorService.UpdateAuthorAsync(author));
+            .ResultFromContent(await _authorService.UpdateAuthorAsync(author, UserId));
     }
 
     [HttpDelete]
-    public async ValueTask<ResponseModel> DeleteAuthor(int id)
+    public async Task<ResponseModel> DeleteAuthor(int id)
     {
         return ResponseModel
-            .ResultFromContent(await _authorService.DeleteAuthorAsync(id));
+            .ResultFromContent(await _authorService.DeleteAuthorAsync(id, UserId));
     }
 }

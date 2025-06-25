@@ -11,5 +11,4 @@ public class ShortVideoForWithDetailsDto
     public Author author { get; set; }
     public Category category { get; set; }
     public List<int> hashtagId { get; set; }
-    public List<Hashtag> hashtags { get; set; }
 }

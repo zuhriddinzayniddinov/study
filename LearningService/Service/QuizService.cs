@@ -6,50 +6,39 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningService.Service;
 
-public class QuizService : IQuizService
+public class QuizService(
+    IQuizRepository quizRepository,
+    IQuestionRepository questionRepository)
+    : IQuizService
 {
-    private readonly IQuizRepository _quizRepository;
-    private readonly IQuestionRepository _questionRepository;
-
-    public QuizService(IQuizRepository quizRepository,
-        IQuestionRepository questionRepository)
-    {
-        _quizRepository = quizRepository;
-        _questionRepository = questionRepository;
-    }
-
-    public async ValueTask<QuizDto> CreateQuizAsync(QuizDto quizDto)
+    public async Task<QuizDto> CreateQuizAsync(QuizDto quizDto)
     {
         var quiz = new Quiz()
         {
-            CourseId = quizDto.courseId,
-            Description = quizDto.description,
             Duration = new TimeSpan(minutes:quizDto.durationMinutes,hours:0,seconds:0),
-            Title = quizDto.title,
             TotalScore = quizDto.totalScore,
             PassingScore = quizDto.passingScore
         };
 
-        return this.QuizToDto(await _quizRepository.AddAsync(quiz));
+        return QuizToDto(await quizRepository.AddAsync(quiz));
     }
-
-    public async ValueTask<QuizDto> DeleteQuizAsync(int id)
+    public async Task<QuizDto> DeleteQuizAsync(int id)
     {
-        var quiz = await _quizRepository.GetByIdAsync(id)
+        var quiz = await quizRepository.GetByIdAsync(id)
             ?? throw new NotFoundException("Not found");
 
-        return this.QuizToDto(await _quizRepository.RemoveAsync(quiz));
+        return this.QuizToDto(await quizRepository.RemoveAsync(quiz));
     }
 
-    public async ValueTask<IList<QuizDto>> GetAllQuizAsync()
+    public async Task<IList<QuizDto>> GetAllQuizAsync()
     {
-        return await _quizRepository
+        return await quizRepository
             .GetAllAsQueryable()
             .Select(q => this.QuizToDto(q))
             .ToListAsync();
     }
 
-    public async ValueTask<QuestionDto> CreateQuestionAsync(QuestionDto questionDto)
+    public async Task<QuestionDto> CreateQuestionAsync(QuestionDto questionDto)
     {
         var question = new SimpleQuestion()
         {
@@ -62,7 +51,7 @@ public class QuizService : IQuizService
             Options = questionDto.options
         };
 
-        var simpleQuestion = await _questionRepository.AddAsync(question);
+        var simpleQuestion = await questionRepository.AddAsync(question);
 
         return new QuestionDto(
             simpleQuestion.Id,
@@ -75,9 +64,9 @@ public class QuizService : IQuizService
             question.Options);
     }
 
-    public async ValueTask<QuestionDto> UpdateQuestionAsync(QuestionDto questionDto)
+    public async Task<QuestionDto> UpdateQuestionAsync(QuestionDto questionDto)
     {
-        var question = await _questionRepository
+        var question = await questionRepository
             .OfType<SimpleQuestion>()
             .OrderBy(q => q.OrderNumber)
             .FirstOrDefaultAsync(q => 
@@ -92,7 +81,7 @@ public class QuizService : IQuizService
         question.TotalBall = questionDto.ball ?? question.TotalBall;
         question.Options = questionDto.options.Count != 0 ? questionDto.options : question.Options;
 
-        await _questionRepository.UpdateAsync(question);
+        await questionRepository.UpdateAsync(question);
 
         return new QuestionDto(
             question.Id,
@@ -105,12 +94,12 @@ public class QuizService : IQuizService
             null);
     }
 
-    public async ValueTask<QuestionDto> DeleteQuestionAsync(long id)
+    public async Task<QuestionDto> DeleteQuestionAsync(long id)
     {
-        var question = await _questionRepository.GetByIdAsync(id)
+        var question = await questionRepository.GetByIdAsync(id)
                    ?? throw new NotFoundException("Not found");
 
-        var simpleQuestion = await _questionRepository.RemoveAsync(question);
+        var simpleQuestion = await questionRepository.RemoveAsync(question);
         
         return new QuestionDto(
             question.Id,
@@ -123,16 +112,16 @@ public class QuizService : IQuizService
             null);
     }
 
-    public async ValueTask<(QuizDto,List<QuestionDto>)> GetQuizIncludeQuestionsByIdAsync(int id)
+    public async Task<(QuizDto,List<QuestionDto>)> GetQuizIncludeQuestionsByIdAsync(int id)
     {
-        var quiz = await _quizRepository
+        var quiz = await quizRepository
                        .GetAllAsQueryable()
-                       .FirstOrDefaultAsync(q => q.CourseId == id);
+                       .FirstOrDefaultAsync(q => q.Id == id);
 
         if (quiz is null)
             return (null,null);
 
-        var questions = await _questionRepository.OfType<SimpleQuestion>()
+        var questions = await questionRepository.OfType<SimpleQuestion>()
             .Where(q => q.QuizId == quiz.Id)
             .OrderBy(q => q.OrderNumber)
             .Select(question => new QuestionDto(
@@ -149,35 +138,30 @@ public class QuizService : IQuizService
         return (this.QuizToDto(quiz), questions);
     }
 
-    public async ValueTask<QuizDto> GetQuizByIdAsync(int id)
+    public async Task<QuizDto> GetQuizByIdAsync(int id)
     {
-        var quiz = await _quizRepository.GetByIdAsync(id)
+        var quiz = await quizRepository.GetByIdAsync(id)
             ?? throw new NotFoundException("Not found");
 
         return this.QuizToDto(quiz);
     }
 
-    public async ValueTask<QuizDto> UpdateQuizAsync(QuizDto quizDto)
+    public async Task<QuizDto> UpdateQuizAsync(QuizDto quizDto)
     {
-        var resultQuiz = await _quizRepository.GetByIdAsync((long)quizDto.id)
+        var resultQuiz = await quizRepository.GetByIdAsync((long)quizDto.id)
             ?? throw new NotFoundException("Not found");
 
-        resultQuiz.Title = quizDto.title ?? resultQuiz.Title;
-        resultQuiz.Description = quizDto.description ?? resultQuiz.Description;
         resultQuiz.Duration = (quizDto.durationMinutes != 0) ? new TimeSpan(0,quizDto.durationMinutes,0) : resultQuiz.Duration;
         resultQuiz.TotalScore = (quizDto.totalScore != 0) ? quizDto.totalScore : resultQuiz.TotalScore;
         resultQuiz.PassingScore = (quizDto.passingScore is not 0) ? quizDto.passingScore : resultQuiz.PassingScore;
 
-        return this.QuizToDto(await _quizRepository.UpdateAsync(resultQuiz));
+        return this.QuizToDto(await quizRepository.UpdateAsync(resultQuiz));
     }
 
     private QuizDto QuizToDto(Quiz quiz)
     {
         return new QuizDto(
             quiz.Id,
-            quiz.CourseId,
-            quiz.Title,
-            quiz.Description,
             quiz.TotalScore,
             (int)quiz.PassingScore,
             quiz.Duration.Minutes);
